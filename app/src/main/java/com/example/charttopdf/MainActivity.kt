@@ -3,28 +3,26 @@ package com.example.charttopdf
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.charttopdf.composables.ApolloChart
+import com.example.charttopdf.composables.SetupTable
 import com.example.charttopdf.ui.theme.ChartToPdfTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,45 +40,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val context = LocalContext.current
-                    var pdfView by remember {
-                        mutableStateOf<View?>(null)
-                    }
-                    val createDocument = rememberLauncherForActivityResult(
-                        contract = CreateSpecificTypeDocument("application/pdf"),
-                        onResult = {
-                            it?.let {
-                                generatePDF(
-                                    context = context,
-                                    uri = it,
-                                    pdfView = pdfView
-                                ) {
-                                    Log.e("Ibrahim", "Pdf Generated!")
-                                }
-                            }
-                        })
-
                     Column(modifier = Modifier
-                        .fillMaxWidth()) {
-                        AndroidView(factory = {
-                            TrendGraphPDFView(it).apply {
-                                post {
-                                    pdfView = this
-                                }
-                            }
-                        })
-                        Button(modifier = Modifier.padding(top = 8.dp),
-                            onClick = { createDocument.launch("Patient_CGM_Report") }) {
-                            Text(text = "GeneratePdf")
-                        }
-                        Row(modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())) {
-                            Column(modifier = Modifier
-                                .verticalScroll(
-                                    rememberScrollState()
-                                )) {
-                                ExportTable()
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())) {
+                        ApolloChart()
+                        Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                            Column {
+                                SetupTable()
                             }
                         }
                     }

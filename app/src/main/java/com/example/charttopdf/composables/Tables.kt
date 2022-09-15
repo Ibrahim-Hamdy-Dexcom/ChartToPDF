@@ -1,10 +1,7 @@
-package com.example.charttopdf
+package com.example.charttopdf.composables
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,7 +17,13 @@ import kotlin.reflect.KProperty
 @Preview
 @Composable
 private fun PreviewTable() {
-    ExportTable()
+    val propertyNameMappings = listOf(
+        "TimeInRange","NumReadings","Min","Max","Median"
+    )
+    Column(modifier = Modifier.fillMaxSize()) {
+        ExportTable(propertyNameMappings = propertyNameMappings)
+    }
+
 }
 
 data class TableRecord(
@@ -44,9 +47,8 @@ private fun generateRecords(num: Int): List<TableRecord> {
 }
 
 @Composable
-fun ExportTable() {
+fun SetupTable() {
     //TODO add ability to do icons into cells?
-    val tableName = "Hourly Statistics"
     //Will use for row names
     val propertyNameMappings = //Add new mapping for property to a name
         TableRecord::class.members.mapNotNull {
@@ -61,6 +63,11 @@ fun ExportTable() {
                 null
             }
         }
+    ExportTable(propertyNameMappings = propertyNameMappings)
+}
+
+@Composable
+private fun ExportTable(propertyNameMappings : List<String>) {
 
     val sdf = SimpleDateFormat("ha")
     //Will use for col headers
