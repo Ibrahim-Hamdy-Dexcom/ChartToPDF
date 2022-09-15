@@ -9,10 +9,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.appcompat.widget.LinearLayoutCompat
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -59,7 +59,9 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         })
-                    Column(modifier = Modifier.fillMaxSize()) {
+
+                    Column(modifier = Modifier
+                        .fillMaxWidth()) {
                         AndroidView(factory = {
                             TrendGraphPDFView(it).apply {
                                 post {
@@ -70,6 +72,16 @@ class MainActivity : ComponentActivity() {
                         Button(modifier = Modifier.padding(top = 8.dp),
                             onClick = { createDocument.launch("Patient_CGM_Report") }) {
                             Text(text = "GeneratePdf")
+                        }
+                        Row(modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())) {
+                            Column(modifier = Modifier
+                                .verticalScroll(
+                                    rememberScrollState()
+                                )) {
+                                ExportTable()
+                            }
                         }
                     }
                 }
@@ -109,6 +121,8 @@ fun PDFScreen() {
         AndroidView(
             modifier = Modifier.fillMaxWidth(),
             factory = { GraphComponent(it, egvs = generateEGVsList().reversed()) })
+
+
     }
 }
 
