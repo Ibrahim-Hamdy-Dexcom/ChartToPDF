@@ -1,13 +1,29 @@
 package com.example.charttopdf.composables
 
+import android.content.Context
+import android.util.Log
+import android.view.View
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import com.example.charttopdf.CreateSpecificTypeDocument
+import com.example.charttopdf.generatePDF
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
@@ -18,10 +34,10 @@ import kotlin.reflect.KProperty
 @Composable
 private fun PreviewTable() {
     val propertyNameMappings = listOf(
-        "TimeInRange","NumReadings","Min","Max","Median"
+        "TimeInRange", "NumReadings", "Min", "Max", "Median"
     )
     Column(modifier = Modifier.fillMaxSize()) {
-        ExportTable(propertyNameMappings = propertyNameMappings)
+        SetupTable(propertyNameMappings = propertyNameMappings)
     }
 
 }
@@ -47,7 +63,58 @@ private fun generateRecords(num: Int): List<TableRecord> {
 }
 
 @Composable
-fun SetupTable() {
+fun ApolloTable() {
+    val context = LocalContext.current
+    var pdfView = remember {
+        mutableStateOf<View?>(null)
+    }
+    val createDocument = rememberLauncherForActivityResult(
+        contract = CreateSpecificTypeDocument("application/pdf"),
+        onResult = {
+            it?.let {
+                generatePDF(
+                    context = context,
+                    uri = it,
+                    pdfView = pdfView.value
+                ) {
+                    Log.e("Dan", "Pdf Generated!")
+                }
+            }
+        })
+    AndroidView(factory = {
+        TablePDFView(it).apply {
+            post {
+                pdfView.value = this
+            }
+        }
+    })
+
+    Button(modifier = Modifier.padding(top = 8.dp),
+        onClick = { createDocument.launch("Patient_CGM_Report") }) {
+        Text(text = "GeneratePdf")
+    }
+}
+
+
+class TablePDFView(
+    context: Context
+) : LinearLayoutCompat(context) {
+    init {
+        val view = ComposeView(context)
+        addView(view)
+        view.setContent {
+            SetupTableReflection()
+        }
+        view.apply { ViewCompat.setNestedScrollingEnabled(this, true) }
+    }
+}
+
+
+/**
+ * Separate into separate function so Preview works because of reflection
+ */
+@Composable
+private fun SetupTableReflection() {
     //TODO add ability to do icons into cells?
     //Will use for row names
     val propertyNameMappings = //Add new mapping for property to a name
@@ -63,11 +130,27 @@ fun SetupTable() {
                 null
             }
         }
-    ExportTable(propertyNameMappings = propertyNameMappings)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+        ) {
+            SetupTable(propertyNameMappings = propertyNameMappings)
+        }
+    }
+
+
 }
 
+/**
+ * Finish data structures setup for table
+ */
 @Composable
-private fun ExportTable(propertyNameMappings : List<String>) {
+private fun SetupTable(propertyNameMappings: List<String>) {
 
     val sdf = SimpleDateFormat("ha")
     //Will use for col headers
@@ -86,6 +169,9 @@ private fun ExportTable(propertyNameMappings : List<String>) {
     )
 }
 
+/**
+ * Table composable
+ */
 @Composable
 private fun Table(
     descriptionLabels: List<String>,
@@ -118,6 +204,7 @@ private fun Table(
             }
         }
     }
+
 }
 
 val cellWidth = 60.dp
